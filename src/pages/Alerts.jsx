@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Clock, ShieldAlert, CheckCircle, Ticket } from 'lucide-react';
+import { Bell, Clock, ShieldAlert, CheckCircle, Ticket, X } from 'lucide-react';
 
 const alertTemplates = [
   { type: 'deal', icon: Ticket, color: 'text-stadium-highlight bg-stadium-highlight/20', title: 'Flash Deal!', desc: '50% off all draft beers at Section 18 for the next 10 minutes.' },

@@ -47,7 +47,7 @@ const Chat = () => {
     scrollToBottom();
   }, [messages, isTyping]);
 
-  const handleSend = (text) => {
+  const handleSend = async (text) => {
     if (!text.trim()) return;
 
     const userMessage = {
@@ -61,28 +61,33 @@ const Chat = () => {
     setInput('');
     setIsTyping(true);
 
-    setTimeout(() => {
-      let aiResponseText = "There are currently multiple vendors fully stocked. Let me know if you need directions!";
-      
-      const lowerInput = text.toLowerCase();
-      if (lowerInput.includes('food')) {
-        aiResponseText = "The shortest food line right now is at 'Grill & Chill' near Section 18. It's only a 3-minute wait!";
-      } else if (lowerInput.includes('bathroom') || lowerInput.includes('restroom')) {
-        aiResponseText = "The nearest bathroom to Section 14 has a 6-minute wait. However, if you head down to the concourse level near Section 10, there's no wait!";
-      } else if (lowerInput.includes('leave') || lowerInput.includes('time')) {
-        aiResponseText = "Based on our predictive models, there is usually a surge 5 minutes before halftime. I recommend heading to concessions now while lines are under 4 minutes.";
-      }
+    try {
+      const res = await fetch('http://localhost:3001/api/v1/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text, eventId: 'evt_001' }),
+      });
+      const data = await res.json();
 
       const aiMessage = {
         id: Date.now() + 1,
         sender: 'ai',
-        text: aiResponseText,
+        text: data.content,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
 
       setMessages(prev => [...prev, aiMessage]);
+    } catch (err) {
+      const errorMessage = {
+        id: Date.now() + 1,
+        sender: 'ai',
+        text: "I'm having trouble connecting to the stadium network. Please try again in a moment!",
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
   return (

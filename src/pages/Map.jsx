@@ -1,33 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Navigation2, Coffee, X } from 'lucide-react';
+import useStadiumData from '../hooks/useStadiumData';
 
 const getDensityColor = (density) => {
-  if (density < 40) return '#22C55E';
+  if (density < 30) return '#22C55E';
   if (density < 75) return '#F59E0B';
   return '#EF4444';
 };
 
-const initialSections = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].map(id => ({
-  id,
-  density: Math.floor(Math.random() * 100),
-  wait: Math.floor(Math.random() * 15) + 2,
-  concession: ['Grill & Chill', 'Beer Garden', 'Hot Dog Cart', 'Pizza Stand'][Math.floor(Math.random() * 4)]
-}));
-
 const Map = () => {
-  const [sections, setSections] = useState(initialSections);
+  const { sections: rawSections } = useStadiumData();
   const [selectedSection, setSelectedSection] = useState(null);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setSections(prev => prev.map(sec => ({
-        ...sec,
-        density: Math.max(10, Math.min(100, sec.density + (Math.floor(Math.random() * 15) - 7))),
-        wait: Math.max(2, Math.min(25, sec.wait + (Math.floor(Math.random() * 3) - 1)))
-      })));
-    }, 8000);
-    return () => clearInterval(interval);
-  }, []);
+  // Transform backend section data {A: {density: 0.82, ...}} into
+  // the array format the SVG renderer expects
+  const sections = rawSections
+    ? Object.entries(rawSections).map(([id, data]) => ({
+        id,
+        density: Math.round(data.density * 100),
+        wait: data.waitFood,
+        concession: data.concession,
+      }))
+    : [];
 
   const handleSectionClick = (section) => {
     setSelectedSection(section);
@@ -52,6 +46,9 @@ const Map = () => {
       </header>
 
       <div className="flex-1 flex justify-center items-center p-4">
+        {sections.length === 0 ? (
+          <div className="text-gray-500 text-sm animate-pulse">Connecting to live data…</div>
+        ) : (
         <div className="relative w-full max-w-sm aspect-square">
           <svg viewBox="0 0 400 350" className="w-full h-full drop-shadow-[0_0_20px_rgba(34,197,94,0.1)]">
             <rect x="150" y="120" width="100" height="130" rx="20" fill="#22C55E" opacity="0.15" stroke="#22C55E" strokeWidth="2" />
@@ -59,6 +56,7 @@ const Map = () => {
             
             {stadiumSectors.map((sector) => {
               const data = sections.find(s => s.id === sector.id);
+              if (!data) return null;
               return (
                 <g key={sector.id} onClick={() => handleSectionClick(data)} className="cursor-pointer transition-transform hover:scale-[1.02] origin-center -ml-1">
                   <path 
@@ -84,6 +82,7 @@ const Map = () => {
             })}
           </svg>
         </div>
+        )}
       </div>
 
       {selectedSection && (

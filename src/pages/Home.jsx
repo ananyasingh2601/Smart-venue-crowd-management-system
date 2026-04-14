@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Coffee, Utensils, Droplets, Presentation, AlertCircle } from 'lucide-react';
+import React from 'react';
+import { Coffee, Utensils, Droplets, Presentation, AlertCircle, Wifi, WifiOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import useStadiumData from '../hooks/useStadiumData';
 
-const MetricCard = ({ title, time, icon: Icon }) => {
+const MetricCard = ({ title, time, icon: Icon, onClick }) => {
   let badgeColor = "bg-stadium-success/20 text-stadium-success border-stadium-success/30";
   let dotColor = "bg-stadium-success";
   
@@ -15,7 +16,7 @@ const MetricCard = ({ title, time, icon: Icon }) => {
   }
 
   return (
-    <div className="bg-stadium-card rounded-2xl p-4 border border-gray-800/50 flex flex-col justify-between">
+    <div onClick={onClick} className="bg-stadium-card rounded-2xl p-4 border border-gray-800/50 flex flex-col justify-between cursor-pointer hover:bg-[#20293F] transition-colors active:scale-95">
       <div className="flex justify-between items-start mb-4">
         <div className="p-2 bg-gray-800/50 rounded-lg">
           <Icon className="text-gray-300" size={20} />
@@ -35,34 +36,31 @@ const MetricCard = ({ title, time, icon: Icon }) => {
 
 const Home = () => {
   const navigate = useNavigate();
-  const [metrics, setMetrics] = useState({
-    food: 4,
-    drinks: 2,
-    bathrooms: 12,
-    density: 68
-  });
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setMetrics(prev => ({
-        food: Math.max(1, Math.min(25, prev.food + (Math.floor(Math.random() * 5) - 2))),
-        drinks: Math.max(1, Math.min(20, prev.drinks + (Math.floor(Math.random() * 5) - 2))),
-        bathrooms: Math.max(1, Math.min(15, prev.bathrooms + (Math.floor(Math.random() * 3) - 1))),
-        density: Math.max(40, Math.min(95, prev.density + (Math.floor(Math.random() * 7) - 3)))
-      }));
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
+  const { density, food, drinks, bathrooms, connected } = useStadiumData();
 
   const radius = 60;
   const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (metrics.density / 100) * circumference;
+  const strokeDashoffset = circumference - (density / 100) * circumference;
+
+  const getDensityLabel = (den) => {
+    if (den < 40) return { text: 'Quiet', color: 'text-stadium-success' };
+    if (den < 65) return { text: 'Moderate', color: 'text-stadium-warning' };
+    if (den < 85) return { text: 'Busy', color: 'text-stadium-danger' };
+    return { text: 'Very Busy', color: 'text-red-600' };
+  };
+  const densityStatus = getDensityLabel(density);
 
   return (
     <div className="p-5 space-y-8 animate-in fade-in duration-500">
       
       <header className="pt-4">
-        <h2 className="text-stadium-accent text-sm font-bold tracking-widest uppercase mb-1">Super Bowl LIX</h2>
+        <div className="flex justify-between items-center">
+          <h2 className="text-stadium-accent text-sm font-bold tracking-widest uppercase mb-1">Super Bowl LIX</h2>
+          <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold ${connected ? 'bg-stadium-success/20 text-stadium-success' : 'bg-stadium-danger/20 text-stadium-danger'}`}>
+            {connected ? <Wifi size={10} /> : <WifiOff size={10} />}
+            {connected ? 'Live' : 'Offline'}
+          </div>
+        </div>
         <h1 className="text-3xl font-bold text-white tracking-tight">Welcome <br/> to the Game</h1>
       </header>
 
@@ -91,12 +89,13 @@ const Home = () => {
               />
             </svg>
             <div className="absolute flex flex-col items-center justify-center">
-              <span className="text-2xl font-bold text-white">{metrics.density}%</span>
+              <span className="text-2xl font-bold text-white">{density}%</span>
             </div>
           </div>
           
           <div>
             <h3 className="text-lg font-bold text-white mb-1">Live Crowd Density</h3>
+            <p className={`text-md font-bold mb-1 uppercase tracking-wider ${densityStatus.color}`}>{densityStatus.text}</p>
             <p className="text-sm text-gray-400 leading-relaxed">Sections 120-145 are currently experiencing high traffic. Consider alternate routes.</p>
           </div>
         </div>
@@ -111,9 +110,9 @@ const Home = () => {
           </span>
         </div>
         <div className="grid grid-cols-2 gap-4">
-          <MetricCard title="Food Stands" time={metrics.food} icon={Utensils} />
-          <MetricCard title="Drinks & Bars" time={metrics.drinks} icon={Coffee} />
-          <MetricCard title="Restrooms" time={metrics.bathrooms} icon={Droplets} />
+          <MetricCard title="Food Stands" time={food} icon={Utensils} onClick={() => navigate('/map')} />
+          <MetricCard title="Drinks & Bars" time={drinks} icon={Coffee} onClick={() => navigate('/map')} />
+          <MetricCard title="Restrooms" time={bathrooms} icon={Droplets} onClick={() => navigate('/map')} />
           
           <button 
             onClick={() => navigate('/pitch')}
