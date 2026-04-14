@@ -1,51 +1,72 @@
 // ─────────────────────────────────────────────────────────────
-// StadiumPulse — WebSocket Route (/api/v1/events/:id/live)
-// Registers the real-time WebSocket upgrade endpoint.
-// On connection: pushes full state snapshot via broadcaster.
-// On tick: receives delta patches from the simulation service.
+// StadiumPulse — WebSocket Route (v2)
+// Handles WS upgrade, message validation, heartbeat pong,
+// and client lifecycle.
 // ─────────────────────────────────────────────────────────────
 
-import { addClient, removeClient } from '../services/broadcaster.js';
+import { addClient, removeClient, markAlive } from '../services/broadcaster.js';
 import { getEvent } from '../state/store.js';
+import { validateInboundMessage, WS_INBOUND_TYPES, WS_OUTBOUND_TYPES } from '../lib/schemas.js';
+import { createLogger } from '../lib/logger.js';
+
+const log = createLogger('ws');
 
 /**
  * @param {import('fastify').FastifyInstance} fastify
  */
 export default async function wsRoutes(fastify) {
-
   fastify.get('/api/v1/events/:id/live', { websocket: true }, (socket, request) => {
     const eventId = request.params.id;
 
     // Validate the event exists
     const event = getEvent(eventId);
     if (!event) {
-      socket.send(JSON.stringify({ type: 'error', message: 'Event not found' }));
+      socket.send(JSON.stringify({ type: WS_OUTBOUND_TYPES.ERROR, message: 'Event not found' }));
       socket.close();
       return;
     }
 
-    // Register client in the broadcaster pool
-    addClient(eventId, socket);
+    // Register with broadcaster — returns a unique clientId
+    const clientId = addClient(eventId, socket);
 
-    // Handle incoming messages from the client (future: user location updates)
+    // ── Handle incoming messages ──────────────────────────
     socket.on('message', (raw) => {
-      try {
-        const msg = JSON.parse(raw.toString());
-        // Currently a no-op — ready for client-to-server messaging
-        console.log(`[ws] received from client:`, msg.type || 'unknown');
-      } catch {
-        // Ignore malformed messages
+      const { valid, parsed, error } = validateInboundMessage(raw.toString());
+
+      if (!valid) {
+        socket.send(JSON.stringify({
+          type: WS_OUTBOUND_TYPES.ERROR,
+          message: error,
+        }));
+        log.debug(`invalid message from client`, { clientId, error });
+        return;
+      }
+
+      switch (parsed.type) {
+        case WS_INBOUND_TYPES.PING:
+          markAlive(eventId, clientId);
+          socket.send(JSON.stringify({ type: WS_OUTBOUND_TYPES.PONG, timestamp: Date.now() }));
+          break;
+
+        case WS_INBOUND_TYPES.LOCATION_UPDATE:
+          // Future: track user's current section for personalized alerts
+          log.debug(`location update`, { clientId, data: parsed });
+          markAlive(eventId, clientId);
+          break;
+
+        default:
+          break;
       }
     });
 
-    // Cleanup on disconnect
+    // ── Cleanup ──────────────────────────────────────────
     socket.on('close', () => {
-      removeClient(eventId, socket);
+      removeClient(eventId, clientId);
     });
 
     socket.on('error', (err) => {
-      console.error(`[ws] socket error:`, err.message);
-      removeClient(eventId, socket);
+      log.error(`socket error`, { clientId, error: err.message });
+      removeClient(eventId, clientId);
     });
   });
 }

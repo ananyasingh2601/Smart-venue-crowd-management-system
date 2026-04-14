@@ -11,27 +11,34 @@ const Layout = () => {
   ];
 
   return (
-    <div className="flex flex-col h-full w-full bg-stadium-dark">
+    <div className="flex flex-col h-full w-full bg-[#070B14]">
       <main className="flex-1 overflow-y-auto pb-20">
         <Outlet />
       </main>
 
-      <nav className="fixed bottom-0 w-full bg-stadium-card border-t border-gray-800/60 pb-safe">
-        <div className="flex justify-around items-center h-16">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.name}
-              to={item.path}
-              className={({ isActive }) =>
-                `flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${
-                  isActive ? 'text-stadium-accent' : 'text-gray-500 hover:text-gray-300'
-                }`
-              }
-            >
-              <item.icon size={20} strokeWidth={2.5} />
-              <span className="text-[10px] font-medium tracking-wide uppercase">{item.name}</span>
-            </NavLink>
-          ))}
+      {/* ── Bottom Nav ──────────────────────────────────── */}
+      <nav className="fixed bottom-0 w-full z-50">
+        {/* Top gradient fade */}
+        <div className="h-6 bg-gradient-to-t from-[#070B14] to-transparent pointer-events-none" />
+        <div className="glass-strong border-t border-white/5 bg-[#0A0F1C]/90 backdrop-blur-xl">
+          <div className="flex justify-around items-center h-16 max-w-md mx-auto">
+            {navItems.map((item) => (
+              <NavLink
+                key={item.name}
+                to={item.path}
+                className={({ isActive }) =>
+                  `flex flex-col items-center justify-center w-16 h-12 rounded-xl transition-all duration-200 ${
+                    isActive
+                      ? 'text-stadium-accent bg-stadium-accent/10 scale-105'
+                      : 'text-gray-500 hover:text-gray-300 hover:bg-white/[0.03]'
+                  }`
+                }
+              >
+                <item.icon size={20} strokeWidth={isActive => isActive ? 2.5 : 1.8} />
+                <span className="text-[9px] font-semibold tracking-wider uppercase mt-1">{item.name}</span>
+              </NavLink>
+            ))}
+          </div>
         </div>
       </nav>
     </div>
