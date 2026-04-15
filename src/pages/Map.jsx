@@ -61,10 +61,8 @@ const Map = () => {
   const handleSectionClick = (data) => {
     if (compareMode) {
       setCompareSelections(prev => {
-        // Remove if already selected
         if (prev.find(s => s.id === data.id)) return prev.filter(s => s.id !== data.id);
         if (prev.length < 2) return [...prev, data];
-        // Replace the second one
         return [prev[0], data];
       });
     } else {
@@ -73,6 +71,7 @@ const Map = () => {
   };
 
   const comparisonPair = compareSelections.length === 2 ? compareSelections : null;
+  const hasPopup = (selectedSection && !compareMode) || comparisonPair;
 
   const getWinner = (a, b, key, lower = true) => {
     if (a[key] === b[key]) return null;
@@ -80,9 +79,9 @@ const Map = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#070B14] relative page-enter">
+    <div className="flex flex-col h-full bg-[#070B14] page-enter overflow-hidden">
       {/* Header */}
-      <header className="pt-5 pb-3 px-5 sticky top-0 z-10 bg-[#070B14]/90 backdrop-blur-xl border-b border-white/[0.04]">
+      <header className="pt-5 pb-3 px-5 shrink-0 bg-[#070B14] border-b border-white/[0.04] z-10">
         <div className="flex justify-between items-start">
           <div>
             <h1 className="text-lg font-extrabold gradient-text">Live Heat Map</h1>
@@ -92,25 +91,25 @@ const Map = () => {
           </div>
           <button
             onClick={() => { setCompareMode(!compareMode); setCompareSelections([]); setSelectedSection(null); }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold transition-all duration-200 ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold transition-all duration-200 shrink-0 ${
               compareMode
                 ? 'bg-stadium-accent/20 text-stadium-accent border border-stadium-accent/30'
                 : 'glass text-gray-400 hover:text-white hover:bg-white/[0.06]'
             }`}
           >
             <GitCompareArrows size={12} />
-            {compareMode ? 'Exit Compare' : 'Compare'}
+            {compareMode ? 'Exit' : 'Compare'}
           </button>
         </div>
       </header>
 
-      {/* Map */}
-      <div className="flex-1 flex justify-center items-center p-4">
+      {/* Map — shrinks when popup is open */}
+      <div className={`flex justify-center items-center p-3 transition-all duration-300 ${hasPopup ? 'h-[35vh]' : 'flex-1'}`}>
         {sections.length === 0 ? (
           <div className="text-gray-500 text-sm animate-shimmer px-6 py-3 rounded-full glass">Connecting to live data…</div>
         ) : (
-          <div className="relative w-full max-w-sm aspect-square">
-            <svg viewBox="0 0 400 350" className="w-full h-full">
+          <div className="relative w-full h-full max-w-sm">
+            <svg viewBox="0 0 400 350" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
               {/* Field */}
               <rect x="150" y="120" width="100" height="130" rx="18" fill="#22C55E" opacity="0.08" stroke="#22C55E" strokeWidth="1.5" strokeOpacity="0.3" />
               <circle cx="200" cy="185" r="18" fill="none" stroke="#22C55E" strokeWidth="1.5" strokeOpacity="0.3" />
@@ -144,110 +143,116 @@ const Map = () => {
               })}
             </svg>
 
-            {/* Legend */}
-            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-3 glass rounded-full px-4 py-2">
-              {[
-                { color: '#22C55E', label: 'Low' },
-                { color: '#F59E0B', label: 'Mid' },
-                { color: '#EF4444', label: 'High' },
-              ].map(l => (
-                <div key={l.label} className="flex items-center gap-1.5">
-                  <div className="w-2 h-2 rounded-full" style={{ background: l.color }} />
-                  <span className="text-[9px] text-gray-400 font-semibold uppercase tracking-wider">{l.label}</span>
-                </div>
-              ))}
-            </div>
+            {/* Legend — hide when popup is open */}
+            {!hasPopup && (
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-3 glass rounded-full px-4 py-2 z-20">
+                {[
+                  { color: '#22C55E', label: 'Low' },
+                  { color: '#F59E0B', label: 'Mid' },
+                  { color: '#EF4444', label: 'High' },
+                ].map(l => (
+                  <div key={l.label} className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full" style={{ background: l.color }} />
+                    <span className="text-[9px] text-gray-400 font-semibold uppercase tracking-wider">{l.label}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
 
-      {/* ── Section Detail Popup ─────────────────────────── */}
+      {/* ── Section Detail Popup — part of the flow, not absolute ── */}
       {selectedSection && !compareMode && (
-        <div className="absolute bottom-0 w-full z-50" style={{ animation: 'fadeSlideUp 0.3s ease-out forwards' }}>
-          <div className="glass-strong rounded-t-3xl p-6 pb-8 shadow-2xl relative border-t border-white/[0.08]">
+        <div className="shrink-0 overflow-y-auto z-20 border-t border-white/[0.08]" style={{ animation: 'fadeSlideUp 0.3s ease-out forwards' }}>
+          <div className="bg-[#0D1117] p-5 pb-24">
             <button
               onClick={() => setSelectedSection(null)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-white bg-white/[0.05] hover:bg-white/[0.1] rounded-full p-1.5 transition-all"
+              className="absolute top-2 right-4 text-gray-500 hover:text-white bg-white/[0.05] hover:bg-white/[0.1] rounded-full p-1.5 transition-all z-30"
+              style={{ position: 'relative', float: 'right', marginTop: '-4px' }}
             >
-              <X size={18} />
+              <X size={16} />
             </button>
 
-            <div className="flex items-center gap-4 mb-5">
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-black text-white"
+            {/* Section Header */}
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-11 h-11 rounded-xl flex items-center justify-center text-lg font-black text-white shrink-0"
                 style={{ background: getDensityColor(selectedSection.density) + '22', border: `1px solid ${getDensityColor(selectedSection.density)}33` }}>
                 {selectedSection.id}
               </div>
               <div>
-                <h2 className="text-xl font-extrabold text-white">Section {selectedSection.id}</h2>
+                <h2 className="text-lg font-extrabold text-white">Section {selectedSection.id}</h2>
                 <div className="flex items-center gap-2 mt-0.5">
                   <span className="text-sm font-bold" style={{ color: getDensityColor(selectedSection.density) }}>
                     {getDensityLabel(selectedSection.density)}
                   </span>
-                  <span className="text-[11px] text-gray-500">• {selectedSection.density}% capacity</span>
+                  <span className="text-[11px] text-gray-500">• {selectedSection.density}%</span>
                 </div>
               </div>
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-3 gap-2 mb-5">
+            <div className="grid grid-cols-3 gap-2 mb-4">
               {[
                 { label: 'Food', val: `${selectedSection.waitFood}m`, emoji: '🍔' },
                 { label: 'Drinks', val: `${selectedSection.waitDrinks}m`, emoji: '🍺' },
                 { label: 'WC', val: `${selectedSection.waitBathroom}m`, emoji: '🚻' },
               ].map(s => (
-                <div key={s.label} className="glass rounded-xl p-3 text-center">
-                  <p className="text-lg mb-0.5">{s.emoji}</p>
+                <div key={s.label} className="bg-white/[0.04] rounded-xl p-3 text-center border border-white/[0.06]">
+                  <p className="text-base mb-0.5">{s.emoji}</p>
                   <p className="text-white font-bold text-sm">{s.val}</p>
                   <p className="text-[9px] text-gray-500 uppercase tracking-wider font-semibold">{s.label}</p>
                 </div>
               ))}
             </div>
 
-            <div className="glass rounded-xl p-3 mb-4 flex items-center gap-3">
-              <Coffee className="text-stadium-accent shrink-0" size={18} />
+            {/* Concession */}
+            <div className="bg-white/[0.04] rounded-xl p-3 mb-4 flex items-center gap-3 border border-white/[0.06]">
+              <Coffee className="text-stadium-accent shrink-0" size={16} />
               <div>
                 <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Nearest Concession</p>
                 <p className="font-bold text-white text-sm">{selectedSection.concession}</p>
               </div>
             </div>
 
-            <button className="w-full bg-gradient-to-r from-stadium-accent to-yellow-500 text-[#070B14] font-bold py-3.5 rounded-xl
+            <button className="w-full bg-gradient-to-r from-stadium-accent to-yellow-500 text-[#070B14] font-bold py-3 rounded-xl
               flex items-center justify-center gap-2 hover:brightness-110 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-stadium-accent/20">
-              <Navigation2 size={16} className="rotate-45" />
+              <Navigation2 size={14} className="rotate-45" />
               Navigate Here
             </button>
           </div>
         </div>
       )}
 
-      {/* ── Comparison Overlay ─────────────────────────────── */}
+      {/* ── Comparison Overlay — part of the flow, not absolute ── */}
       {comparisonPair && (
-        <div className="absolute bottom-0 w-full z-50" style={{ animation: 'fadeSlideUp 0.3s ease-out forwards' }}>
-          <div className="glass-strong rounded-t-3xl p-6 pb-8 shadow-2xl relative border-t border-white/[0.08]">
+        <div className="shrink-0 overflow-y-auto z-20 border-t border-white/[0.08]" style={{ animation: 'fadeSlideUp 0.3s ease-out forwards' }}>
+          <div className="bg-[#0D1117] p-5 pb-24">
             <button
               onClick={() => setCompareSelections([])}
-              className="absolute top-4 right-4 text-gray-500 hover:text-white bg-white/[0.05] hover:bg-white/[0.1] rounded-full p-1.5 transition-all"
+              className="text-gray-500 hover:text-white bg-white/[0.05] hover:bg-white/[0.1] rounded-full p-1.5 transition-all z-30"
+              style={{ float: 'right', marginTop: '-4px' }}
             >
-              <X size={18} />
+              <X size={16} />
             </button>
 
-            <div className="flex items-center gap-2 mb-5">
-              <GitCompareArrows className="text-stadium-accent" size={18} />
-              <h2 className="text-lg font-extrabold text-white">Section Comparison</h2>
+            <div className="flex items-center gap-2 mb-4">
+              <GitCompareArrows className="text-stadium-accent" size={16} />
+              <h2 className="text-base font-extrabold text-white">Section Comparison</h2>
             </div>
 
             {/* Side by Side Headers */}
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              {comparisonPair.map((s, i) => (
-                <div key={s.id} className="glass rounded-xl p-3 text-center">
+            <div className="grid grid-cols-2 gap-2 mb-3">
+              {comparisonPair.map((s) => (
+                <div key={s.id} className="bg-white/[0.04] rounded-xl p-2.5 text-center border border-white/[0.06]">
                   <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-black text-white mx-auto mb-2"
+                    className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black text-white mx-auto mb-1.5"
                     style={{ background: getDensityColor(s.density) + '22', border: `1px solid ${getDensityColor(s.density)}33` }}
                   >
                     {s.id}
                   </div>
-                  <p className="text-white font-bold text-sm">Section {s.id}</p>
-                  <p className="text-[10px] font-semibold mt-0.5" style={{ color: getDensityColor(s.density) }}>
+                  <p className="text-white font-bold text-xs">Section {s.id}</p>
+                  <p className="text-[9px] font-semibold mt-0.5" style={{ color: getDensityColor(s.density) }}>
                     {s.density}% • {getDensityLabel(s.density)}
                   </p>
                 </div>
@@ -255,26 +260,26 @@ const Map = () => {
             </div>
 
             {/* Metrics Comparison */}
-            <div className="space-y-2 mb-5">
+            <div className="space-y-1.5 mb-4">
               {[
                 { label: '🏟️ Density', key: 'density', unit: '%', lower: true },
-                { label: '🍔 Food Wait', key: 'waitFood', unit: 'm', lower: true },
-                { label: '🍺 Drinks Wait', key: 'waitDrinks', unit: 'm', lower: true },
-                { label: '🚻 Bathroom Wait', key: 'waitBathroom', unit: 'm', lower: true },
+                { label: '🍔 Food', key: 'waitFood', unit: 'm', lower: true },
+                { label: '🍺 Drinks', key: 'waitDrinks', unit: 'm', lower: true },
+                { label: '🚻 WC', key: 'waitBathroom', unit: 'm', lower: true },
               ].map(metric => {
                 const winner = getWinner(comparisonPair[0], comparisonPair[1], metric.key, metric.lower);
                 return (
-                  <div key={metric.key} className="glass rounded-xl p-3 flex items-center justify-between">
-                    <span className="text-[11px] text-gray-400 font-semibold">{metric.label}</span>
-                    <div className="flex items-center gap-4">
-                      <span className={`text-sm font-bold ${winner === 'A' ? 'text-emerald-400' : 'text-white'}`}>
+                  <div key={metric.key} className="bg-white/[0.04] rounded-lg px-3 py-2.5 flex items-center justify-between border border-white/[0.06]">
+                    <span className="text-[10px] text-gray-400 font-semibold">{metric.label}</span>
+                    <div className="flex items-center gap-3">
+                      <span className={`text-xs font-bold ${winner === 'A' ? 'text-emerald-400' : 'text-white'}`}>
                         {comparisonPair[0][metric.key]}{metric.unit}
-                        {winner === 'A' && <Trophy className="inline ml-1 text-emerald-400" size={10} />}
+                        {winner === 'A' && <Trophy className="inline ml-1 text-emerald-400" size={9} />}
                       </span>
-                      <span className="text-[9px] text-gray-600">vs</span>
-                      <span className={`text-sm font-bold ${winner === 'B' ? 'text-emerald-400' : 'text-white'}`}>
+                      <span className="text-[8px] text-gray-600">vs</span>
+                      <span className={`text-xs font-bold ${winner === 'B' ? 'text-emerald-400' : 'text-white'}`}>
                         {comparisonPair[1][metric.key]}{metric.unit}
-                        {winner === 'B' && <Trophy className="inline ml-1 text-emerald-400" size={10} />}
+                        {winner === 'B' && <Trophy className="inline ml-1 text-emerald-400" size={9} />}
                       </span>
                     </div>
                   </div>
@@ -288,9 +293,9 @@ const Map = () => {
               const betterSection = a.density < b.density ? a : b;
               const diff = Math.abs(a.density - b.density);
               return (
-                <div className="glass rounded-xl p-3 border border-emerald-500/20">
+                <div className="bg-emerald-500/[0.06] rounded-xl p-3 border border-emerald-500/20">
                   <p className="text-[11px] text-emerald-400 font-semibold">
-                    💡 Section {betterSection.id} is {diff}% less crowded — head there for a better experience!
+                    💡 Section {betterSection.id} is {diff}% less crowded — head there!
                   </p>
                 </div>
               );
@@ -303,4 +308,3 @@ const Map = () => {
 };
 
 export default Map;
-

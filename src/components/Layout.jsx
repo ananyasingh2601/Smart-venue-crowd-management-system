@@ -27,21 +27,21 @@ const Layout = () => {
         {/* Top gradient fade */}
         <div className="h-6 bg-gradient-to-t from-[#070B14] to-transparent pointer-events-none" />
         <div className="glass-strong border-t border-white/5 bg-[#0A0F1C]/90 backdrop-blur-xl">
-          <div className="flex justify-around items-center h-16 max-w-lg mx-auto">
+          <div className="flex justify-around items-center h-14 max-w-lg mx-auto px-1">
             {navItems.map((item) => (
               <NavLink
                 key={item.name}
                 to={item.path}
                 className={({ isActive }) =>
-                  `flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all duration-200 ${
+                  `flex flex-col items-center justify-center w-12 h-11 rounded-lg transition-all duration-200 ${
                     isActive
-                      ? 'text-stadium-accent bg-stadium-accent/10 scale-105'
-                      : 'text-gray-500 hover:text-gray-300 hover:bg-white/[0.03]'
+                      ? 'text-stadium-accent bg-stadium-accent/10'
+                      : 'text-gray-500 hover:text-gray-300'
                   }`
                 }
               >
-                <item.icon size={18} strokeWidth={1.8} />
-                <span className="text-[8px] font-semibold tracking-wider uppercase mt-0.5">{item.name}</span>
+                <item.icon size={16} strokeWidth={1.8} />
+                <span className="text-[7px] font-semibold tracking-wider uppercase mt-0.5 leading-none">{item.name}</span>
               </NavLink>
             ))}
           </div>
