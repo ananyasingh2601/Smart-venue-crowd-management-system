@@ -22,13 +22,13 @@ const MetricCard = ({ title, time, icon: Icon, onClick }) => {
         <div className="p-2.5 bg-white/[0.04] rounded-xl">
           <Icon className="text-gray-300" size={18} />
         </div>
-        <div className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${s.bg} ${s.text} flex items-center gap-1.5`}>
+        <div className={`px-2.5 py-1 rounded-full text-xs font-bold ${s.bg} ${s.text} flex items-center gap-1.5`}>
           <div className={`w-1.5 h-1.5 rounded-full ${s.dot} live-dot`} />
           {time} min
         </div>
       </div>
       <div>
-        <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">{title}</p>
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{title}</p>
         <p className="text-xl font-bold text-white mt-0.5 num-transition">{time < 5 ? 'Low' : time <= 10 ? 'Moderate' : 'High'}</p>
       </div>
     </div>
@@ -46,7 +46,7 @@ const LiveBadge = ({ connected, lastUpdated }) => {
   }, [lastUpdated]);
 
   return (
-    <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold transition-all duration-300 ${
+    <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all duration-300 ${
       connected
         ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
         : 'bg-red-500/10 text-red-400 border border-red-500/20'
@@ -89,7 +89,7 @@ const Home = () => {
       {/* ── Header ──────────────────────────────────────── */}
       <header className="pt-3 flex justify-between items-start">
         <div>
-          <p className="text-stadium-accent text-[10px] font-bold tracking-[0.25em] uppercase">Super Bowl LIX</p>
+          <p className="text-stadium-accent text-[11px] font-bold tracking-[0.25em] uppercase">Super Bowl LIX</p>
           <h1 className="text-[28px] font-extrabold gradient-text leading-tight mt-1">Welcome<br/>to the Game</h1>
         </div>
         <LiveBadge connected={connected} lastUpdated={lastUpdated} />
@@ -122,9 +122,9 @@ const Home = () => {
           </div>
 
           <div className="flex-1">
-            <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Live Crowd Density</p>
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Live Crowd Density</p>
             <p className={`text-lg font-extrabold mt-1 ${ds.color} num-transition`}>{ds.label}</p>
-            <p className="text-[12px] text-gray-500 mt-2 leading-relaxed">
+            <p className="text-[13px] text-gray-300/70 mt-2 leading-relaxed">
               {density >= 65 ? 'High traffic areas detected. Consider alternate routes.' : 'Crowd levels are manageable. Good time to move around.'}
             </p>
           </div>
@@ -134,8 +134,8 @@ const Home = () => {
       {/* ── Wait Time Cards ─────────────────────────────── */}
       <section>
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-[15px] font-bold text-white">Predicted Wait Times</h2>
-          <div className="flex items-center gap-1.5 text-[10px] font-semibold text-emerald-400">
+          <h2 className="text-base font-bold text-white">Predicted Wait Times</h2>
+          <div className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-400">
             <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 live-dot" />
             AI Powered
           </div>
@@ -152,7 +152,7 @@ const Home = () => {
             <div className="w-11 h-11 rounded-full bg-stadium-accent/10 flex items-center justify-center text-stadium-accent animate-float">
               <Presentation size={20} />
             </div>
-            <span className="text-[11px] font-semibold text-white uppercase tracking-wider">Pitch Deck</span>
+            <span className="text-xs font-semibold text-white uppercase tracking-wider">Pitch Deck</span>
           </div>
         </div>
       </section>
