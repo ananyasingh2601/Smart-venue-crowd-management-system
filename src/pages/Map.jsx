@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Navigation2, Coffee, X, TrendingDown, TrendingUp, AlertTriangle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Navigation2, Coffee, X, TrendingDown, TrendingUp, AlertTriangle, GitCompareArrows, Trophy } from 'lucide-react';
 import useStadiumData from '../hooks/useStadiumData';
 
 const getDensityColor = (d) => {
@@ -19,6 +19,22 @@ const getDensityLabel = (d) => {
 const Map = () => {
   const { sections: rawSections } = useStadiumData();
   const [selectedSection, setSelectedSection] = useState(null);
+  const [compareMode, setCompareMode] = useState(false);
+  const [compareSelections, setCompareSelections] = useState([]);
+
+  // Track section views for achievement
+  useEffect(() => {
+    if (selectedSection) {
+      try {
+        const p = JSON.parse(localStorage.getItem('stadiumpulse_progress') || '{}');
+        const viewed = new Set(p._viewedSections || []);
+        viewed.add(selectedSection.id);
+        p._viewedSections = [...viewed];
+        if (viewed.size >= 8) p.explorer = 8;
+        localStorage.setItem('stadiumpulse_progress', JSON.stringify(p));
+      } catch {}
+    }
+  }, [selectedSection]);
 
   const sections = rawSections
     ? Object.entries(rawSections).map(([id, data]) => ({
@@ -42,12 +58,50 @@ const Map = () => {
     { id: 'H', path: "M 50 100 L 150 50 L 150 120 L 120 120 Z", cx: 130, cy: 100 },
   ];
 
+  const handleSectionClick = (data) => {
+    if (compareMode) {
+      setCompareSelections(prev => {
+        // Remove if already selected
+        if (prev.find(s => s.id === data.id)) return prev.filter(s => s.id !== data.id);
+        if (prev.length < 2) return [...prev, data];
+        // Replace the second one
+        return [prev[0], data];
+      });
+    } else {
+      setSelectedSection(data);
+    }
+  };
+
+  const comparisonPair = compareSelections.length === 2 ? compareSelections : null;
+
+  const getWinner = (a, b, key, lower = true) => {
+    if (a[key] === b[key]) return null;
+    return lower ? (a[key] < b[key] ? 'A' : 'B') : (a[key] > b[key] ? 'A' : 'B');
+  };
+
   return (
     <div className="flex flex-col h-full bg-[#070B14] relative page-enter">
       {/* Header */}
       <header className="pt-5 pb-3 px-5 sticky top-0 z-10 bg-[#070B14]/90 backdrop-blur-xl border-b border-white/[0.04]">
-        <h1 className="text-lg font-extrabold gradient-text">Live Heat Map</h1>
-        <p className="text-[11px] text-gray-500 mt-0.5 font-medium">Real-time crowd density • Updates every 8s</p>
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-lg font-extrabold gradient-text">Live Heat Map</h1>
+            <p className="text-[11px] text-gray-500 mt-0.5 font-medium">
+              {compareMode ? 'Tap two sections to compare' : 'Real-time crowd density • Updates every 8s'}
+            </p>
+          </div>
+          <button
+            onClick={() => { setCompareMode(!compareMode); setCompareSelections([]); setSelectedSection(null); }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold transition-all duration-200 ${
+              compareMode
+                ? 'bg-stadium-accent/20 text-stadium-accent border border-stadium-accent/30'
+                : 'glass text-gray-400 hover:text-white hover:bg-white/[0.06]'
+            }`}
+          >
+            <GitCompareArrows size={12} />
+            {compareMode ? 'Exit Compare' : 'Compare'}
+          </button>
+        </div>
       </header>
 
       {/* Map */}
@@ -66,17 +120,18 @@ const Map = () => {
                 if (!data) return null;
                 const color = getDensityColor(data.density);
                 const isHot = data.density > 75;
+                const isCompareSelected = compareSelections.find(s => s.id === sector.id);
 
                 return (
-                  <g key={sector.id} onClick={() => setSelectedSection(data)} className="cursor-pointer">
+                  <g key={sector.id} onClick={() => handleSectionClick(data)} className="cursor-pointer">
                     <path
                       d={sector.path}
                       fill={color}
-                      fillOpacity="0.7"
-                      stroke="#070B14"
-                      strokeWidth="4"
+                      fillOpacity={isCompareSelected ? "0.9" : "0.7"}
+                      stroke={isCompareSelected ? "#fff" : "#070B14"}
+                      strokeWidth={isCompareSelected ? "3" : "4"}
                       className={`transition-all duration-700 ease-in-out ${isHot ? 'animate-map-pulse' : ''}`}
-                      style={{ filter: isHot ? `drop-shadow(0 0 8px ${color})` : 'none' }}
+                      style={{ filter: isHot ? `drop-shadow(0 0 8px ${color})` : isCompareSelected ? 'drop-shadow(0 0 6px rgba(255,255,255,0.3))' : 'none' }}
                     />
                     <text x={sector.cx} y={sector.cy} fill="#fff" fontSize="15" fontWeight="800" textAnchor="middle" className="pointer-events-none">
                       {sector.id}
@@ -107,7 +162,7 @@ const Map = () => {
       </div>
 
       {/* ── Section Detail Popup ─────────────────────────── */}
-      {selectedSection && (
+      {selectedSection && !compareMode && (
         <div className="absolute bottom-0 w-full z-50" style={{ animation: 'fadeSlideUp 0.3s ease-out forwards' }}>
           <div className="glass-strong rounded-t-3xl p-6 pb-8 shadow-2xl relative border-t border-white/[0.08]">
             <button
@@ -164,8 +219,88 @@ const Map = () => {
           </div>
         </div>
       )}
+
+      {/* ── Comparison Overlay ─────────────────────────────── */}
+      {comparisonPair && (
+        <div className="absolute bottom-0 w-full z-50" style={{ animation: 'fadeSlideUp 0.3s ease-out forwards' }}>
+          <div className="glass-strong rounded-t-3xl p-6 pb-8 shadow-2xl relative border-t border-white/[0.08]">
+            <button
+              onClick={() => setCompareSelections([])}
+              className="absolute top-4 right-4 text-gray-500 hover:text-white bg-white/[0.05] hover:bg-white/[0.1] rounded-full p-1.5 transition-all"
+            >
+              <X size={18} />
+            </button>
+
+            <div className="flex items-center gap-2 mb-5">
+              <GitCompareArrows className="text-stadium-accent" size={18} />
+              <h2 className="text-lg font-extrabold text-white">Section Comparison</h2>
+            </div>
+
+            {/* Side by Side Headers */}
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              {comparisonPair.map((s, i) => (
+                <div key={s.id} className="glass rounded-xl p-3 text-center">
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-black text-white mx-auto mb-2"
+                    style={{ background: getDensityColor(s.density) + '22', border: `1px solid ${getDensityColor(s.density)}33` }}
+                  >
+                    {s.id}
+                  </div>
+                  <p className="text-white font-bold text-sm">Section {s.id}</p>
+                  <p className="text-[10px] font-semibold mt-0.5" style={{ color: getDensityColor(s.density) }}>
+                    {s.density}% • {getDensityLabel(s.density)}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {/* Metrics Comparison */}
+            <div className="space-y-2 mb-5">
+              {[
+                { label: '🏟️ Density', key: 'density', unit: '%', lower: true },
+                { label: '🍔 Food Wait', key: 'waitFood', unit: 'm', lower: true },
+                { label: '🍺 Drinks Wait', key: 'waitDrinks', unit: 'm', lower: true },
+                { label: '🚻 Bathroom Wait', key: 'waitBathroom', unit: 'm', lower: true },
+              ].map(metric => {
+                const winner = getWinner(comparisonPair[0], comparisonPair[1], metric.key, metric.lower);
+                return (
+                  <div key={metric.key} className="glass rounded-xl p-3 flex items-center justify-between">
+                    <span className="text-[11px] text-gray-400 font-semibold">{metric.label}</span>
+                    <div className="flex items-center gap-4">
+                      <span className={`text-sm font-bold ${winner === 'A' ? 'text-emerald-400' : 'text-white'}`}>
+                        {comparisonPair[0][metric.key]}{metric.unit}
+                        {winner === 'A' && <Trophy className="inline ml-1 text-emerald-400" size={10} />}
+                      </span>
+                      <span className="text-[9px] text-gray-600">vs</span>
+                      <span className={`text-sm font-bold ${winner === 'B' ? 'text-emerald-400' : 'text-white'}`}>
+                        {comparisonPair[1][metric.key]}{metric.unit}
+                        {winner === 'B' && <Trophy className="inline ml-1 text-emerald-400" size={10} />}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Recommendation */}
+            {(() => {
+              const a = comparisonPair[0], b = comparisonPair[1];
+              const betterSection = a.density < b.density ? a : b;
+              const diff = Math.abs(a.density - b.density);
+              return (
+                <div className="glass rounded-xl p-3 border border-emerald-500/20">
+                  <p className="text-[11px] text-emerald-400 font-semibold">
+                    💡 Section {betterSection.id} is {diff}% less crowded — head there for a better experience!
+                  </p>
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 export default Map;
+

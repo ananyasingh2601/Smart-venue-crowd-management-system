@@ -7,7 +7,7 @@
 // ─────────────────────────────────────────────────────────────
 
 import config from '../config.js';
-import { getState, updateSection } from '../state/store.js';
+import { getState, updateSection, pushDensityHistory } from '../state/store.js';
 import { broadcast } from './broadcaster.js';
 import { WS_OUTBOUND_TYPES } from '../lib/schemas.js';
 import { createLogger } from '../lib/logger.js';
@@ -122,6 +122,13 @@ function tick(eventId) {
     updateSection(eventId, id, patch);
     delta[id] = patch;
   }
+
+  // Push density snapshot into history ring buffer
+  const densityMap = {};
+  for (const [id, d] of Object.entries(delta)) {
+    densityMap[id] = d.density;
+  }
+  pushDensityHistory(eventId, densityMap);
 
   return delta;
 }

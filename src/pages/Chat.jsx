@@ -56,6 +56,13 @@ const Chat = () => {
   const handleSend = async (text) => {
     if (!text.trim()) return;
 
+    // Track for AI Whisperer achievement
+    try {
+      const p = JSON.parse(localStorage.getItem('stadiumpulse_progress') || '{}');
+      p.ai_whisperer = (p.ai_whisperer || 0) + 1;
+      localStorage.setItem('stadiumpulse_progress', JSON.stringify(p));
+    } catch {}
+
     setMessages(prev => [...prev, {
       id: Date.now(),
       sender: 'user',

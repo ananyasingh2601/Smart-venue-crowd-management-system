@@ -5,7 +5,7 @@
 // ─────────────────────────────────────────────────────────────
 
 import config from '../config.js';
-import { getEvent, getState, getAggregates, getVersion, appendChatMessage } from '../state/store.js';
+import { getEvent, getState, getAggregates, getVersion, appendChatMessage, getForecast, logSosAlert } from '../state/store.js';
 import { getConnectionCount } from '../services/broadcaster.js';
 import { healthResponseSchema, eventResponseSchema, chatRequestSchema, chatResponseSchema } from '../lib/schemas.js';
 import { createLogger } from '../lib/logger.js';
@@ -136,6 +136,36 @@ Never speculate outside your stadium context. Use friendly, conversational tone.
       role: 'assistant',
       content: responseText,
       timestamp: new Date().toISOString(),
+    };
+  });
+
+  // ── GET /api/v1/events/:id/forecast ───────────────────
+  fastify.get('/api/v1/events/:id/forecast', async (request, reply) => {
+    const forecast = getForecast(request.params.id);
+    if (!forecast) return reply.status(404).send({ error: 'Event not found' });
+    return forecast;
+  });
+
+  // ── POST /api/v1/sos ──────────────────────────────────
+  fastify.post('/api/v1/sos', {
+    config: {
+      rateLimit: {
+        max: 5,
+        timeWindow: 60000,
+      },
+    },
+  }, async (request, reply) => {
+    const { type, location, message } = request.body || {};
+    if (!type || !['medical', 'security', 'lost_child', 'fire', 'other'].includes(type)) {
+      return reply.status(400).send({ error: 'type must be one of: medical, security, lost_child, fire, other' });
+    }
+
+    const alert = logSosAlert({ type, location: location || 'Unknown', message: message || '' });
+
+    return {
+      status: 'dispatched',
+      alert,
+      message: `Emergency ${type} alert has been dispatched. Help is on the way.`,
     };
   });
 }

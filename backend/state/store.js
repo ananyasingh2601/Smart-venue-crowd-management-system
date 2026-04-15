@@ -23,6 +23,13 @@ const stateStore = new Map();
 /** @type {Map<string, Array>} key = "chat:{sessionId}" */
 const chatStore = new Map();
 
+/** @type {Map<string, Array<object>>} key = "history:{eventId}" — ring buffer of density snapshots */
+const historyStore = new Map();
+const HISTORY_MAX = 20;
+
+/** @type {Array<object>} SOS alerts log */
+const sosAlerts = [];
+
 /** Global version counter — incremented on every state mutation */
 let _version = 0;
 
@@ -160,6 +167,120 @@ export function getAggregates(eventId) {
     version: state.version,
     updatedAt: state.updatedAt,
   };
+}
+
+// ── Density History ──────────────────────────────────────────
+
+/**
+ * Push a density snapshot into the ring buffer.
+ * @param {string} eventId
+ * @param {Record<string, number>} densityMap — { sectionId: density }
+ */
+export function pushDensityHistory(eventId, densityMap) {
+  const key = `history:${eventId}`;
+  if (!historyStore.has(key)) historyStore.set(key, []);
+  const buf = historyStore.get(key);
+  buf.push({ timestamp: Date.now(), densities: { ...densityMap } });
+  if (buf.length > HISTORY_MAX) buf.shift();
+}
+
+/**
+ * Get density history for an event.
+ * @param {string} eventId
+ * @returns {Array<object>}
+ */
+export function getDensityHistory(eventId) {
+  return historyStore.get(`history:${eventId}`) ?? [];
+}
+
+/**
+ * Compute a simple trend for each section (up / down / stable).
+ * @param {string} eventId
+ * @returns {Record<string, string>|null}
+ */
+export function getTrends(eventId) {
+  const history = getDensityHistory(eventId);
+  if (history.length < 3) return null;
+
+  const recent = history.slice(-3);
+  const trends = {};
+  for (const sectionId of config.venue.sections) {
+    const vals = recent.map(h => h.densities[sectionId] ?? 0);
+    const delta = vals[vals.length - 1] - vals[0];
+    trends[sectionId] = delta > 0.03 ? 'up' : delta < -0.03 ? 'down' : 'stable';
+  }
+  return trends;
+}
+
+/**
+ * Forecast density for the next 4 time slots (7.5 / 15 / 22.5 / 30 min).
+ * Uses simple linear extrapolation from recent history.
+ * @param {string} eventId
+ * @returns {object|null}
+ */
+export function getForecast(eventId) {
+  const state = stateStore.get(`state:${eventId}`);
+  const history = getDensityHistory(eventId);
+  if (!state) return null;
+
+  const slots = [7.5, 15, 22.5, 30]; // minutes ahead
+  const forecast = {};
+
+  for (const sectionId of config.venue.sections) {
+    const current = state.sections[sectionId]?.density ?? 0.5;
+
+    // Compute trend slope from history
+    let slope = 0;
+    if (history.length >= 3) {
+      const recent = history.slice(-5);
+      const first = recent[0].densities[sectionId] ?? current;
+      const last = recent[recent.length - 1].densities[sectionId] ?? current;
+      const timeSpanMin = (recent[recent.length - 1].timestamp - recent[0].timestamp) / 60000;
+      slope = timeSpanMin > 0 ? (last - first) / timeSpanMin : 0;
+    }
+
+    forecast[sectionId] = slots.map(minutes => ({
+      minutes,
+      density: Math.min(0.98, Math.max(0.05, +(current + slope * minutes).toFixed(2))),
+      confidence: Math.max(0.3, +(1 - minutes / 60).toFixed(2)),
+    }));
+  }
+
+  return {
+    eventId,
+    generatedAt: Date.now(),
+    slots,
+    sections: forecast,
+  };
+}
+
+// ── SOS Alerts ───────────────────────────────────────────────
+
+/**
+ * Log an SOS alert.
+ * @param {object} alert — { type, location, message }
+ * @returns {object} the stored alert
+ */
+export function logSosAlert(alert) {
+  const entry = {
+    id: uuid(),
+    ...alert,
+    timestamp: Date.now(),
+    status: 'dispatched',
+  };
+  sosAlerts.push(entry);
+  if (sosAlerts.length > 100) sosAlerts.shift();
+  log.info('SOS alert logged', { id: entry.id, type: entry.type });
+  return entry;
+}
+
+/**
+ * Get recent SOS alerts.
+ * @param {number} limit
+ * @returns {Array}
+ */
+export function getSosAlerts(limit = 10) {
+  return sosAlerts.slice(-limit).reverse();
 }
 
 // ── Chat Session Store ───────────────────────────────────────
