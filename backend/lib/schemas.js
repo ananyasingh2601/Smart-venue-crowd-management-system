@@ -91,5 +91,6 @@ export const chatResponseSchema = {
     role: { type: 'string' },
     content: { type: 'string' },
     timestamp: { type: 'string' },
+    provider: { type: 'string' },
   },
 };

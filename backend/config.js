@@ -13,6 +13,10 @@ const envInt = (key, fallback) => parseInt(process.env[key] ?? String(fallback),
 /** @param {string} key  @param {boolean} fallback */
 const envBool = (key, fallback) => (process.env[key] ?? String(fallback)) === 'true';
 
+if (!process.env.GOOGLE_APPLICATION_CREDENTIALS && process.env.FIREBASE_APPLICATION_CREDENTIALS) {
+  process.env.GOOGLE_APPLICATION_CREDENTIALS = process.env.FIREBASE_APPLICATION_CREDENTIALS;
+}
+
 const config = Object.freeze({
   // ── Server ──────────────────────────────────────────
   server: {
@@ -53,6 +57,19 @@ const config = Object.freeze({
 
   // ── Default Event ───────────────────────────────────
   defaultEventId: env('DEFAULT_EVENT_ID', 'evt_001'),
+
+  // ── Google / Gemini ──────────────────────────────────
+  google: {
+    vertexProjectId: env('GOOGLE_CLOUD_PROJECT', ''),
+    vertexLocation: env('GOOGLE_CLOUD_LOCATION', 'us-central1'),
+    geminiModel: env('GOOGLE_GEMINI_MODEL', 'gemini-2.0-flash'),
+    requestTimeoutMs: envInt('GOOGLE_GEMINI_TIMEOUT_MS', 12000),
+  },
+
+  // ── Firebase ──────────────────────────────────────────
+  firebase: {
+    projectId: env('FIREBASE_PROJECT_ID', env('GOOGLE_CLOUD_PROJECT', '')),
+  },
 
   // ── Venue Seed Data ─────────────────────────────────
   venue: {

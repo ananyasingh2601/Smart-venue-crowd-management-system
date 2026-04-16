@@ -2,6 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Navigation2, Coffee, X, TrendingDown, TrendingUp, AlertTriangle, GitCompareArrows, Trophy } from 'lucide-react';
 import useStadiumData from '../hooks/useStadiumData';
 
+const VENUE_NAME = 'MetLife Stadium';
+const VENUE_QUERY = encodeURIComponent(VENUE_NAME);
+const GOOGLE_MAPS_EMBED_URL = `https://www.google.com/maps?q=${VENUE_QUERY}&output=embed`;
+const GOOGLE_MAPS_DIRECTIONS_URL = `https://www.google.com/maps/dir/?api=1&destination=${VENUE_QUERY}`;
+const GOOGLE_MAPS_SEARCH_URL = `https://www.google.com/maps/search/?api=1&query=${VENUE_QUERY}`;
+
 const getDensityColor = (d) => {
   if (d < 30) return '#22C55E';
   if (d < 60) return '#F59E0B';
@@ -103,8 +109,74 @@ const Map = () => {
         </div>
       </header>
 
+      <section className="px-4 pt-4 shrink-0">
+        <div className="glass-strong border border-white/[0.06] rounded-2xl overflow-hidden bg-[#0B1020]">
+          <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-white/[0.06]">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.22em] text-gray-400 font-semibold">Google Maps</p>
+              <h2 className="text-sm font-bold text-white">{VENUE_NAME}</h2>
+            </div>
+            <div className="flex items-center gap-2">
+              <a
+                href={GOOGLE_MAPS_SEARCH_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="px-3 py-1.5 rounded-full text-[11px] font-semibold text-white bg-white/[0.06] hover:bg-white/[0.1] transition-colors"
+              >
+                Open Map
+              </a>
+              <a
+                href={GOOGLE_MAPS_DIRECTIONS_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="px-3 py-1.5 rounded-full text-[11px] font-semibold text-[#070B14] bg-gradient-to-r from-stadium-accent to-yellow-500 hover:brightness-110 transition-colors"
+              >
+                Directions
+              </a>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-[1.3fr_0.7fr] gap-0">
+            <div className="min-h-[220px] md:min-h-[280px] bg-black">
+              <iframe
+                title="MetLife Stadium on Google Maps"
+                src={GOOGLE_MAPS_EMBED_URL}
+                className="w-full h-full min-h-[220px] md:min-h-[280px]"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+            </div>
+
+            <div className="p-4 border-t md:border-t-0 md:border-l border-white/[0.06] space-y-3">
+              <div className="bg-white/[0.04] rounded-xl p-3 border border-white/[0.05]">
+                <p className="text-[10px] uppercase tracking-[0.22em] text-gray-400 font-semibold mb-1">Quick Access</p>
+                <p className="text-sm font-semibold text-white">Use Google Maps for venue navigation and turn-by-turn directions.</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { label: 'Gates', value: 'A-D' },
+                  { label: 'Sections', value: 'A-H' },
+                  { label: 'Venue', value: 'Live event' },
+                  { label: 'Mode', value: 'Crowd-aware' },
+                ].map((item) => (
+                  <div key={item.label} className="rounded-xl border border-white/[0.06] bg-white/[0.03] px-3 py-2">
+                    <p className="text-[10px] uppercase tracking-[0.18em] text-gray-500 font-semibold">{item.label}</p>
+                    <p className="text-sm text-white font-bold mt-0.5">{item.value}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="text-[11px] text-gray-400 leading-relaxed">
+                Google Maps handles venue navigation. StadiumPulse still powers the live density and queue data.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Map — shrinks when popup is open */}
-      <div className={`flex justify-center items-center p-3 transition-all duration-300 ${hasPopup ? 'h-[35vh]' : 'flex-1'}`}>
+      <div className={`flex justify-center items-center p-3 transition-all duration-300 ${hasPopup ? 'h-[28vh]' : 'flex-1'}`}>
         {sections.length === 0 ? (
           <div className="text-gray-400 text-sm animate-shimmer px-6 py-3 rounded-full glass">Connecting to live data…</div>
         ) : (
@@ -215,11 +287,16 @@ const Map = () => {
               </div>
             </div>
 
-            <button className="w-full bg-gradient-to-r from-stadium-accent to-yellow-500 text-[#070B14] font-bold py-3 rounded-xl
-              flex items-center justify-center gap-2 hover:brightness-110 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-stadium-accent/20">
+            <a
+              href={GOOGLE_MAPS_DIRECTIONS_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="w-full bg-gradient-to-r from-stadium-accent to-yellow-500 text-[#070B14] font-bold py-3 rounded-xl
+              flex items-center justify-center gap-2 hover:brightness-110 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-stadium-accent/20"
+            >
               <Navigation2 size={14} className="rotate-45" />
               Navigate Here
-            </button>
+            </a>
           </div>
         </div>
       )}

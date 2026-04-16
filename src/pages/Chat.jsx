@@ -21,6 +21,11 @@ const ChatMessage = ({ message }) => {
           : 'bg-gradient-to-br from-stadium-highlight to-blue-600 text-white rounded-tr-md shadow-lg shadow-stadium-highlight/10'
       }`}>
         <p className="text-sm leading-relaxed">{message.text}</p>
+        {isAI && message.provider && (
+          <div className="mt-2 inline-flex items-center rounded-full border border-white/[0.08] bg-white/[0.04] px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-gray-400">
+            {message.provider === 'gemini' ? 'Vertex AI' : 'Fallback'}
+          </div>
+        )}
         <div className={`flex items-center gap-1 mt-1.5 text-[10px] font-medium ${isAI ? 'text-gray-500' : 'text-blue-200 justify-end'}`}>
           <Clock size={8} />
           {message.timestamp}
@@ -35,7 +40,7 @@ const Chat = () => {
     {
       id: 1,
       sender: 'ai',
-      text: "Hey! I'm your StadiumPulse AI Concierge 🏟️ I have live access to wait times, concessions, and navigation across the stadium. How can I help?",
+      text: "Hey! I'm your StadiumPulse AI Concierge. I have live access to wait times, concessions, and navigation across the stadium. How can I help?",
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
   ]);
@@ -84,6 +89,7 @@ const Chat = () => {
         id: Date.now() + 1,
         sender: 'ai',
         text: data.content,
+        provider: data.provider,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }]);
     } catch {
@@ -110,7 +116,7 @@ const Chat = () => {
             <h1 className="text-base font-extrabold text-white">AI Concierge</h1>
             <p className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 live-dot" />
-              Live • Powered by StadiumPulse AI
+              Live • Gemini ready
             </p>
           </div>
         </div>

@@ -1,5 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { Bell, Clock, ShieldAlert, CheckCircle, Ticket, X, Sparkles } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Bell, Clock, ShieldAlert, CheckCircle, Ticket, X, Sparkles, Database } from 'lucide-react';
+import { collection, limit, onSnapshot, orderBy, query } from 'firebase/firestore';
+
+import { auth, db, ensureAnonymousAuth, firebaseEnabled, subscribeToAuth, sosAlertsCollection } from '../lib/firebase';
 
 const alertTemplates = [
   { type: 'deal', icon: Ticket, accent: 'from-blue-500/20 to-cyan-500/20', border: 'border-blue-500/15', dot: 'bg-blue-400', badge: 'bg-blue-500/10 text-blue-400', title: '🎉 Flash Deal!', desc: '50% off all draft beers at Section 18 for the next 10 minutes.' },
@@ -8,43 +11,129 @@ const alertTemplates = [
   { type: 'danger', icon: ShieldAlert, accent: 'from-red-500/20 to-rose-500/20', border: 'border-red-500/15', dot: 'bg-red-400', badge: 'bg-red-500/10 text-red-400', title: '🚨 Exit Congestion', desc: 'North Gates experiencing heavy delays. Use East/West exits.' },
 ];
 
+const fallbackAlerts = [
+  { id: 1, ...alertTemplates[0], time: 'Just now' },
+  { id: 2, ...alertTemplates[1], time: '2m ago' },
+  { id: 3, ...alertTemplates[2], time: '8m ago' },
+];
+
+const metaByType = Object.fromEntries(alertTemplates.map((template) => [template.type, template]));
+
+function formatTimestamp(value) {
+  if (!value) return 'Just now';
+  if (typeof value === 'number') {
+    return new Date(value).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+  if (typeof value.toDate === 'function') {
+    return value.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+  if (typeof value === 'string') {
+    const date = new Date(value);
+    if (!Number.isNaN(date.getTime())) {
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+  }
+  return 'Just now';
+}
+
+function mapFirestoreAlert(doc) {
+  const meta = metaByType[doc.type] || metaByType.info;
+  return {
+    id: doc.id,
+    ...meta,
+    title: doc.title || meta.title,
+    desc: doc.message || doc.desc,
+    time: formatTimestamp(doc.createdAt),
+    location: doc.location || 'Unknown',
+    reporterId: doc.reporterId || null,
+    status: doc.status || 'dispatched',
+  };
+}
+
 const Alerts = () => {
-  const [alerts, setAlerts] = useState([
-    { id: 1, ...alertTemplates[0], time: 'Just now' },
-    { id: 2, ...alertTemplates[1], time: '2m ago' },
-    { id: 3, ...alertTemplates[2], time: '8m ago' },
-  ]);
+  const [alerts, setAlerts] = useState(fallbackAlerts);
+  const [authLabel, setAuthLabel] = useState(firebaseEnabled ? 'Connecting to Firebase…' : 'Firebase disabled');
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      const template = alertTemplates[Math.floor(Math.random() * alertTemplates.length)];
-      setAlerts(prev => [
-        { id: Date.now(), ...template, time: 'Just now' },
-        ...prev.map(a => ({ ...a, time: a.time === 'Just now' ? '30s ago' : a.time }))
-      ].slice(0, 8));
-    }, 30000);
-    return () => clearInterval(interval);
+    if (!firebaseEnabled || !db) {
+      setAlerts(fallbackAlerts);
+      const interval = setInterval(() => {
+        const template = alertTemplates[Math.floor(Math.random() * alertTemplates.length)];
+        setAlerts((prev) => [
+          { id: Date.now(), ...template, time: 'Just now' },
+          ...prev.map((alert) => ({ ...alert, time: alert.time === 'Just now' ? '30s ago' : alert.time })),
+        ].slice(0, 8));
+      }, 30000);
+      return () => clearInterval(interval);
+    }
+
+    let unsubscribeAuth = () => {};
+    let unsubscribeAlerts = () => {};
+
+    ensureAnonymousAuth().catch(() => {
+      setAuthLabel('Firebase Auth unavailable');
+    });
+
+    unsubscribeAuth = subscribeToAuth((user) => {
+      if (user?.uid) {
+        setAuthLabel(user.isAnonymous ? `Firebase Auth • Anonymous ${user.uid.slice(0, 8)}` : `Firebase Auth • ${user.uid.slice(0, 8)}`);
+      } else {
+        setAuthLabel('Firebase Auth');
+      }
+    });
+
+    const alertsCollection = sosAlertsCollection();
+    if (alertsCollection) {
+      const alertsQuery = query(alertsCollection, orderBy('createdAt', 'desc'), limit(8));
+      unsubscribeAlerts = onSnapshot(alertsQuery, (snapshot) => {
+        const liveAlerts = snapshot.docs.map((doc) => mapFirestoreAlert({ id: doc.id, ...doc.data() }));
+        setAlerts(liveAlerts.length ? liveAlerts : fallbackAlerts);
+      });
+    }
+
+    return () => {
+      unsubscribeAuth?.();
+      unsubscribeAlerts?.();
+    };
+  }, []);
+
+  const sourceLabel = useMemo(() => {
+    if (!firebaseEnabled) return 'Local demo alerts';
+    return 'Live Firestore alerts';
   }, []);
 
   const dismissAlert = (id) => {
-    setAlerts(prev => prev.filter(a => a.id !== id));
+    setAlerts((prev) => prev.filter((alert) => alert.id !== id));
   };
 
   return (
     <div className="flex flex-col h-full bg-[#070B14] page-enter overflow-y-auto">
       {/* Header */}
-      <header className="pt-5 pb-3 px-5 sticky top-0 z-10 bg-[#070B14]/90 backdrop-blur-xl border-b border-white/[0.04] flex justify-between items-end">
+      <header className="pt-5 pb-3 px-5 sticky top-0 z-10 bg-[#070B14]/90 backdrop-blur-xl border-b border-white/[0.04] flex justify-between items-end gap-3">
         <div>
           <h1 className="text-lg font-extrabold gradient-text">Smart Alerts</h1>
-          <p className="text-xs text-gray-400 mt-0.5 font-medium">AI-powered stadium updates</p>
+          <p className="text-xs text-gray-400 mt-0.5 font-medium flex items-center gap-2 flex-wrap">
+            <span>{firebaseEnabled ? 'Firebase-backed stadium updates' : 'AI-powered stadium updates'}</span>
+            <span className="px-2 py-0.5 rounded-full bg-white/[0.06] text-[10px] text-gray-300 border border-white/[0.08]">
+              {sourceLabel}
+            </span>
+          </p>
         </div>
-        <div className="w-9 h-9 rounded-xl glass flex items-center justify-center relative">
-          <Bell className="text-stadium-accent" size={16} />
-          {alerts.length > 0 && (
-            <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-[#070B14] flex items-center justify-center">
-              <span className="text-[8px] font-bold text-white">{alerts.length}</span>
+        <div className="flex items-center gap-2">
+          {firebaseEnabled && (
+            <div className="px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold flex items-center gap-1.5">
+              <Database size={11} />
+              {authLabel}
             </div>
           )}
+          <div className="w-9 h-9 rounded-xl glass flex items-center justify-center relative">
+            <Bell className="text-stadium-accent" size={16} />
+            {alerts.length > 0 && (
+              <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-[#070B14] flex items-center justify-center">
+                <span className="text-[8px] font-bold text-white">{alerts.length}</span>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -73,8 +162,11 @@ const Alerts = () => {
                   <alert.icon size={18} />
                 </div>
                 <div className="flex-1 min-w-0 pr-6">
-                  <div className="flex justify-between items-start mb-1">
+                  <div className="flex justify-between items-start mb-1 gap-2">
                     <h3 className="font-bold text-white text-sm truncate">{alert.title}</h3>
+                    {alert.location && (
+                      <span className="text-[10px] text-gray-500 font-semibold uppercase tracking-wider shrink-0">{alert.location}</span>
+                    )}
                   </div>
                   <p className="text-[13px] text-gray-300/80 leading-relaxed">{alert.desc}</p>
                   <p className="text-[10px] text-gray-500 font-semibold mt-2 uppercase tracking-wider">{alert.time}</p>

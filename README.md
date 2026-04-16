@@ -43,4 +43,32 @@ The overall flow is:
 
 ## Setup Notes
 
-To enable Gemini, add a valid Google AI Studio key to `backend/.env` as `GOOGLE_GEMINI_API_KEY`. If that value is left empty, the chatbot will continue using the built-in fallback responder.
+### Vertex AI Chatbot
+
+The chatbot now prefers Google Vertex AI with service-account credentials. To enable it, set these values in `backend/.env`:
+
+- `GOOGLE_CLOUD_PROJECT` or `FIREBASE_PROJECT_ID`
+- `GOOGLE_CLOUD_LOCATION` such as `us-central1`
+- `GOOGLE_APPLICATION_CREDENTIALS` pointing to your service-account JSON file, or `FIREBASE_APPLICATION_CREDENTIALS` with the same path
+
+The backend will use Vertex AI first and fall back to the built-in stadium responder if the credentials are missing or Vertex is unavailable.
+
+### Firebase Alerts And Auth
+
+Alerts now sync through Firebase Firestore and the frontend signs in anonymously through Firebase Auth when Firebase is configured. Add these values to your Vite environment before running the app:
+
+- `VITE_FIREBASE_API_KEY`
+- `VITE_FIREBASE_AUTH_DOMAIN`
+- `VITE_FIREBASE_PROJECT_ID`
+- `VITE_FIREBASE_APP_ID`
+- `VITE_FIREBASE_STORAGE_BUCKET`
+- `VITE_FIREBASE_MESSAGING_SENDER_ID`
+
+If Firebase is not configured, the UI falls back to the local demo alerts and the SOS flow still works against the backend memory store.
+
+### What Changed
+
+- Firebase Auth is used for anonymous session identity in the alerts flow.
+- Firestore stores SOS alerts and chat transcripts from the backend.
+- Vertex AI replaces the AI Studio API key flow for Gemini-style responses.
+- Google Maps is already wired into the venue map screen for navigation.
