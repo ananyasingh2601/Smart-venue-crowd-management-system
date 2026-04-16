@@ -36,7 +36,7 @@ const Alerts = () => {
       <header className="pt-5 pb-3 px-5 sticky top-0 z-10 bg-[#070B14]/90 backdrop-blur-xl border-b border-white/[0.04] flex justify-between items-end">
         <div>
           <h1 className="text-lg font-extrabold gradient-text">Smart Alerts</h1>
-          <p className="text-[11px] text-gray-500 mt-0.5 font-medium">AI-powered stadium updates</p>
+          <p className="text-xs text-gray-400 mt-0.5 font-medium">AI-powered stadium updates</p>
         </div>
         <div className="w-9 h-9 rounded-xl glass flex items-center justify-center relative">
           <Bell className="text-stadium-accent" size={16} />
@@ -55,8 +55,8 @@ const Alerts = () => {
             <div className="w-16 h-16 rounded-2xl glass flex items-center justify-center mb-4">
               <Sparkles className="text-gray-600" size={28} />
             </div>
-            <p className="text-gray-500 font-medium">You're all caught up!</p>
-            <p className="text-[11px] text-gray-600 mt-1">New alerts will appear here automatically</p>
+            <p className="text-gray-400 font-medium">You're all caught up!</p>
+            <p className="text-xs text-gray-500 mt-1">New alerts will appear here automatically</p>
           </div>
         ) : (
           alerts.map((alert, idx) => (
@@ -74,10 +74,10 @@ const Alerts = () => {
                 </div>
                 <div className="flex-1 min-w-0 pr-6">
                   <div className="flex justify-between items-start mb-1">
-                    <h3 className="font-bold text-white text-[13px] truncate">{alert.title}</h3>
+                    <h3 className="font-bold text-white text-sm truncate">{alert.title}</h3>
                   </div>
-                  <p className="text-[12px] text-gray-400 leading-relaxed">{alert.desc}</p>
-                  <p className="text-[9px] text-gray-600 font-semibold mt-2 uppercase tracking-wider">{alert.time}</p>
+                  <p className="text-[13px] text-gray-300/80 leading-relaxed">{alert.desc}</p>
+                  <p className="text-[10px] text-gray-500 font-semibold mt-2 uppercase tracking-wider">{alert.time}</p>
                 </div>
               </div>
 

@@ -85,13 +85,13 @@ const Map = () => {
         <div className="flex justify-between items-start">
           <div>
             <h1 className="text-lg font-extrabold gradient-text">Live Heat Map</h1>
-            <p className="text-[11px] text-gray-500 mt-0.5 font-medium">
+            <p className="text-xs text-gray-400 mt-0.5 font-medium">
               {compareMode ? 'Tap two sections to compare' : 'Real-time crowd density • Updates every 8s'}
             </p>
           </div>
           <button
             onClick={() => { setCompareMode(!compareMode); setCompareSelections([]); setSelectedSection(null); }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold transition-all duration-200 shrink-0 ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all duration-200 shrink-0 ${
               compareMode
                 ? 'bg-stadium-accent/20 text-stadium-accent border border-stadium-accent/30'
                 : 'glass text-gray-400 hover:text-white hover:bg-white/[0.06]'
@@ -106,7 +106,7 @@ const Map = () => {
       {/* Map — shrinks when popup is open */}
       <div className={`flex justify-center items-center p-3 transition-all duration-300 ${hasPopup ? 'h-[35vh]' : 'flex-1'}`}>
         {sections.length === 0 ? (
-          <div className="text-gray-500 text-sm animate-shimmer px-6 py-3 rounded-full glass">Connecting to live data…</div>
+          <div className="text-gray-400 text-sm animate-shimmer px-6 py-3 rounded-full glass">Connecting to live data…</div>
         ) : (
           <div className="relative w-full h-full max-w-sm">
             <svg viewBox="0 0 400 350" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
@@ -186,7 +186,7 @@ const Map = () => {
                   <span className="text-sm font-bold" style={{ color: getDensityColor(selectedSection.density) }}>
                     {getDensityLabel(selectedSection.density)}
                   </span>
-                  <span className="text-[11px] text-gray-500">• {selectedSection.density}%</span>
+                  <span className="text-xs text-gray-400">• {selectedSection.density}%</span>
                 </div>
               </div>
             </div>
@@ -201,7 +201,7 @@ const Map = () => {
                 <div key={s.label} className="bg-white/[0.04] rounded-xl p-3 text-center border border-white/[0.06]">
                   <p className="text-base mb-0.5">{s.emoji}</p>
                   <p className="text-white font-bold text-sm">{s.val}</p>
-                  <p className="text-[9px] text-gray-500 uppercase tracking-wider font-semibold">{s.label}</p>
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">{s.label}</p>
                 </div>
               ))}
             </div>
@@ -210,7 +210,7 @@ const Map = () => {
             <div className="bg-white/[0.04] rounded-xl p-3 mb-4 flex items-center gap-3 border border-white/[0.06]">
               <Coffee className="text-stadium-accent shrink-0" size={16} />
               <div>
-                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Nearest Concession</p>
+                <p className="text-[11px] text-gray-400 uppercase tracking-wider font-semibold">Nearest Concession</p>
                 <p className="font-bold text-white text-sm">{selectedSection.concession}</p>
               </div>
             </div>

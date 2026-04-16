@@ -78,11 +78,11 @@ const Forecast = () => {
               <Zap className="text-stadium-accent" size={18} />
               Crowd Forecast
             </h1>
-            <p className="text-[11px] text-gray-500 mt-0.5 font-medium">AI-predicted density • Next 30 minutes</p>
+            <p className="text-xs text-gray-400 mt-0.5 font-medium">AI-predicted density • Next 30 minutes</p>
           </div>
           <button
             onClick={fetchForecast}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full glass text-[10px] font-semibold text-gray-400
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full glass text-xs font-semibold text-gray-400
               hover:text-white hover:bg-white/[0.06] transition-all active:scale-95"
           >
             <RefreshCw size={10} className={loading ? 'animate-spin' : ''} />
@@ -97,7 +97,7 @@ const Forecast = () => {
           <button
             key={idx}
             onClick={() => setSelectedSlot(idx)}
-            className={`flex-1 py-2.5 rounded-xl text-[11px] font-bold transition-all duration-200 ${
+            className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 ${
               selectedSlot === idx
                 ? 'bg-gradient-to-r from-stadium-accent to-yellow-500 text-[#070B14] shadow-lg shadow-stadium-accent/20'
                 : 'glass text-gray-400 hover:text-white hover:bg-white/[0.06]'
@@ -118,7 +118,7 @@ const Forecast = () => {
             <div className="w-12 h-12 rounded-full glass flex items-center justify-center animate-shimmer">
               <Zap className="text-gray-600" size={24} />
             </div>
-            <p className="text-gray-500 text-sm mt-4">Generating forecast…</p>
+            <p className="text-gray-400 text-sm mt-4">Generating forecast…</p>
           </div>
         ) : (
           sortedSections.map((section, idx) => {
@@ -144,10 +144,10 @@ const Forecast = () => {
                       {section.id}
                     </div>
                     <div>
-                      <h3 className="text-white font-bold text-[13px]">{section.name}</h3>
+                      <h3 className="text-white font-bold text-sm">{section.name}</h3>
                       <div className="flex items-center gap-1.5 mt-0.5">
                         {getTrendIcon(section.currentDensity, prediction.density)}
-                        <span className="text-[10px] font-semibold" style={{ color }}>
+                        <span className="text-xs font-semibold" style={{ color }}>
                           {getDensityLabel(prediction.density)}
                         </span>
                       </div>
@@ -155,7 +155,7 @@ const Forecast = () => {
                   </div>
                   <div className="text-right">
                     <p className="text-xl font-black text-white">{pct}%</p>
-                    <p className="text-[9px] text-gray-600 font-semibold">
+                    <p className="text-[10px] text-gray-500 font-semibold">
                       {Math.round(prediction.confidence * 100)}% conf
                     </p>
                   </div>
@@ -180,7 +180,7 @@ const Forecast = () => {
                     return (
                       <div
                         key={si}
-                        className={`flex-1 rounded-md py-1 text-center text-[8px] font-bold transition-all duration-200 ${
+                        className={`flex-1 rounded-md py-1 text-center text-[9px] font-bold transition-all duration-200 ${
                           si === selectedSlot ? 'ring-1 ring-white/20' : ''
                         }`}
                         style={{ background: sc + '22', color: sc }}

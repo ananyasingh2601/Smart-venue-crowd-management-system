@@ -100,10 +100,10 @@ const Rewards = () => {
               <Trophy className="text-stadium-accent" size={18} />
               Rewards
             </h1>
-            <p className="text-[11px] text-gray-500 mt-0.5 font-medium">Unlock badges • Earn XP</p>
+            <p className="text-xs text-gray-400 mt-0.5 font-medium">Unlock badges • Earn XP</p>
           </div>
           <div className="flex items-center gap-2">
-            <div className="px-3 py-1.5 rounded-full glass text-[10px] font-bold text-stadium-accent flex items-center gap-1.5 border border-stadium-accent/20">
+            <div className="px-3 py-1.5 rounded-full glass text-xs font-bold text-stadium-accent flex items-center gap-1.5 border border-stadium-accent/20">
               <Zap size={10} />
               {totalXP} XP
             </div>
@@ -116,14 +116,14 @@ const Rewards = () => {
         <div className="glass rounded-2xl p-4 relative overflow-hidden">
           <div className="flex justify-between items-center mb-3">
             <div>
-              <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Fan Level</p>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Fan Level</p>
               <p className="text-white font-extrabold text-lg mt-0.5">
                 {unlockedCount < 3 ? 'Rookie' : unlockedCount < 6 ? 'Regular' : unlockedCount < 8 ? 'MVP' : 'Legend'}
               </p>
             </div>
             <div className="text-right">
               <p className="text-white font-bold text-sm">{unlockedCount}/{BADGES.length}</p>
-              <p className="text-[9px] text-gray-500 uppercase tracking-wider font-semibold">Badges</p>
+              <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Badges</p>
             </div>
           </div>
           <div className="h-2.5 rounded-full bg-white/[0.06] overflow-hidden">
@@ -133,8 +133,8 @@ const Rewards = () => {
             />
           </div>
           <div className="flex justify-between mt-1.5">
-            <span className="text-[9px] text-gray-600 font-semibold">{totalXP} XP</span>
-            <span className="text-[9px] text-gray-600 font-semibold">{maxXP} XP</span>
+            <span className="text-[10px] text-gray-500 font-semibold">{totalXP} XP</span>
+            <span className="text-[10px] text-gray-500 font-semibold">{maxXP} XP</span>
           </div>
           {/* Ambient glow */}
           <div className="absolute -top-6 -right-6 w-24 h-24 bg-stadium-accent/10 rounded-full blur-[40px] pointer-events-none" />
@@ -178,17 +178,17 @@ const Rewards = () => {
                 {/* Badge Info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
-                    <h3 className={`font-bold text-[14px] ${unlocked ? 'text-white' : 'text-gray-500'}`}>
+                    <h3 className={`font-bold text-sm ${unlocked ? 'text-white' : 'text-gray-400'}`}>
                       {badge.label}
                     </h3>
                     {unlocked && (
-                      <span className="text-[9px] font-bold px-2 py-0.5 rounded-full"
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
                         style={{ background: badge.color + '22', color: badge.color }}>
                         +{badge.xp} XP
                       </span>
                     )}
                   </div>
-                  <p className={`text-[11px] ${unlocked ? 'text-gray-400' : 'text-gray-600'}`}>{badge.desc}</p>
+                  <p className={`text-xs ${unlocked ? 'text-gray-300/80' : 'text-gray-500'}`}>{badge.desc}</p>
 
                   {/* Progress Bar */}
                   {!unlocked && (
@@ -212,7 +212,7 @@ const Rewards = () => {
                       <Award size={16} style={{ color: badge.color }} />
                     </div>
                   ) : (
-                    <span className="text-[10px] text-gray-600 font-semibold">
+                    <span className="text-xs text-gray-500 font-semibold">
                       {val}/{badge.threshold}
                     </span>
                   )}

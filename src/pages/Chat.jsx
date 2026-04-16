@@ -20,8 +20,8 @@ const ChatMessage = ({ message }) => {
           ? 'glass border border-white/[0.06] rounded-tl-md'
           : 'bg-gradient-to-br from-stadium-highlight to-blue-600 text-white rounded-tr-md shadow-lg shadow-stadium-highlight/10'
       }`}>
-        <p className="text-[13px] leading-relaxed">{message.text}</p>
-        <div className={`flex items-center gap-1 mt-1.5 text-[9px] font-medium ${isAI ? 'text-gray-600' : 'text-blue-200 justify-end'}`}>
+        <p className="text-sm leading-relaxed">{message.text}</p>
+        <div className={`flex items-center gap-1 mt-1.5 text-[10px] font-medium ${isAI ? 'text-gray-500' : 'text-blue-200 justify-end'}`}>
           <Clock size={8} />
           {message.timestamp}
         </div>
@@ -107,8 +107,8 @@ const Chat = () => {
             <Sparkles className="text-stadium-accent" size={16} />
           </div>
           <div>
-            <h1 className="text-[15px] font-extrabold text-white">AI Concierge</h1>
-            <p className="text-[9px] text-emerald-400 font-semibold flex items-center gap-1">
+            <h1 className="text-base font-extrabold text-white">AI Concierge</h1>
+            <p className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 live-dot" />
               Live • Powered by StadiumPulse AI
             </p>
@@ -164,7 +164,7 @@ const Chat = () => {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend(input)}
             placeholder="Ask anything about the stadium..."
-            className="flex-1 bg-transparent px-3 py-2 text-[13px] text-white focus:outline-none placeholder-gray-600"
+            className="flex-1 bg-transparent px-3 py-2 text-sm text-white focus:outline-none placeholder-gray-500"
           />
           <button
             onClick={() => handleSend(input)}
