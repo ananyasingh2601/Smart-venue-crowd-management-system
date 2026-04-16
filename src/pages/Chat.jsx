@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Clock, Sparkles, Zap } from 'lucide-react';
+import { apiUrl } from '../lib/api';
 
 const ChatMessage = ({ message }) => {
   const isAI = message.sender === 'ai';
@@ -78,7 +79,7 @@ const Chat = () => {
     setIsTyping(true);
 
     try {
-      const res = await fetch('http://localhost:3001/api/v1/chat', {
+      const res = await fetch(apiUrl('/api/v1/chat'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: text, eventId: 'evt_001' }),

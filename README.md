@@ -36,7 +36,7 @@ The overall flow is:
 
 - The venue is treated as a single live event with one active stadium model.
 - Crowd and queue data are simulated, not pulled from real sensors.
-- Google Gemini is optional and enabled through an API key in `backend/.env`.
+- Google Gemini is optional and enabled through Vertex AI service-account auth in `backend/.env`.
 - If Gemini is unavailable, the app should still work with the local fallback chatbot.
 - REST API requests are expected to go to port 3001 and the Vite frontend to port 5173 during local development.
 - The attendee experience is optimized for short, actionable answers rather than long-form conversation.
@@ -72,3 +72,62 @@ If Firebase is not configured, the UI falls back to the local demo alerts and th
 - Firestore stores SOS alerts and chat transcripts from the backend.
 - Vertex AI replaces the AI Studio API key flow for Gemini-style responses.
 - Google Maps is already wired into the venue map screen for navigation.
+
+## Go Live (Step By Step)
+
+This app is now deployment-ready. You can publish it with:
+
+- Backend on Render
+- Frontend on Vercel
+
+### 1. Push Code To GitHub
+
+1. Create a GitHub repository.
+2. Push this project to that repository.
+
+### 2. Deploy Backend On Render
+
+1. Open Render and click New Web Service.
+2. Connect your GitHub repository.
+3. Set Root Directory to `backend`.
+4. Set Build Command to `npm install`.
+5. Set Start Command to `npm start`.
+6. Add environment variables from `backend/.env.example`.
+7. For service-account auth, upload your JSON securely and set `GOOGLE_APPLICATION_CREDENTIALS` path according to your Render secret file setup, or map it through `FIREBASE_APPLICATION_CREDENTIALS`.
+8. Deploy and copy your backend URL, for example `https://your-backend.onrender.com`.
+9. Verify with `https://your-backend.onrender.com/api/v1/health`.
+
+### 3. Deploy Frontend On Vercel
+
+1. Open Vercel and click Add New Project.
+2. Import the same GitHub repository.
+3. Keep root as project root (not backend).
+4. Framework preset should detect Vite.
+5. Add environment variables from `.env.example`.
+6. Set `VITE_API_BASE_URL` to your Render backend URL.
+7. Deploy.
+
+`vercel.json` is already included so React Router routes work on refresh.
+
+### 4. Firebase Setup For Live Alerts
+
+1. In Firebase Console, create a web app under your Firebase project.
+2. Copy the Firebase web config values into Vercel environment variables.
+3. In Firestore, create database (production or test mode as needed).
+4. Ensure anonymous auth is enabled in Firebase Authentication.
+5. Redeploy frontend after adding env vars.
+
+### 5. Vertex AI Setup For Live Chat AI
+
+1. In Google Cloud, enable Vertex AI API.
+2. Create a service account with Vertex AI User role.
+3. Generate a service-account key JSON.
+4. Provide credentials securely to Render and set project/location env vars.
+5. Redeploy backend.
+
+### 6. Final End-To-End Check
+
+1. Open frontend URL from Vercel.
+2. Confirm map, forecast, and SOS actions work.
+3. Open chat and verify responses.
+4. Confirm backend logs show provider `gemini` when Vertex credentials are valid.

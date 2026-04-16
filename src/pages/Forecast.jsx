@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { TrendingUp, TrendingDown, Minus, Clock, RefreshCw, Zap } from 'lucide-react';
+import { apiUrl } from '../lib/api';
 
 const slotLabels = ['+7.5m', '+15m', '+22.5m', '+30m'];
 
@@ -37,7 +38,7 @@ const Forecast = () => {
 
   const fetchForecast = useCallback(async () => {
     try {
-      const res = await fetch('http://localhost:3001/api/v1/events/evt_001/forecast');
+      const res = await fetch(apiUrl('/api/v1/events/evt_001/forecast'));
       const data = await res.json();
       setForecast(data);
       setLastRefresh(Date.now());

@@ -7,9 +7,9 @@
 // ─────────────────────────────────────────────────────────────
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { wsUrl } from '../lib/api';
 
-const WS_URL = 'ws://localhost:3001/api/v1/events/evt_001/live';
-const REST_URL = 'http://localhost:3001/api/v1/events/evt_001/state';
+const WS_URL = wsUrl('/api/v1/events/evt_001/live');
 
 export default function useStadiumData() {
   const [sections, setSections] = useState(null);

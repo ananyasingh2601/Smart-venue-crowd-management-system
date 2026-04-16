@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ShieldAlert, X, Heart, Shield, Baby, Flame, HelpCircle, CheckCircle, Loader2 } from 'lucide-react';
 import { auth, ensureAnonymousAuth, firebaseEnabled } from '../lib/firebase';
+import { apiUrl } from '../lib/api';
 
 const emergencyTypes = [
   { type: 'medical', icon: Heart, label: 'Medical', desc: 'Medical emergency or injury', color: '#EF4444', bg: 'from-red-500/20 to-rose-500/20' },
@@ -35,7 +36,7 @@ const SOSButton = () => {
     setSending(type);
     try {
       const reporterId = auth?.currentUser?.uid || null;
-      const res = await fetch('http://localhost:3001/api/v1/sos', {
+      const res = await fetch(apiUrl('/api/v1/sos'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type, location: 'Current Location', reporterId }),
