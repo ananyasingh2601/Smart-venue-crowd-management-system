@@ -85,7 +85,7 @@ const Map = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#070B14] page-enter overflow-hidden">
+    <div className="flex flex-col min-h-full bg-[#070B14] page-enter overflow-y-auto pb-24">
       {/* Header */}
       <header className="pt-5 pb-3 px-5 shrink-0 bg-[#070B14] border-b border-white/[0.04] z-10">
         <div className="flex justify-between items-start">
