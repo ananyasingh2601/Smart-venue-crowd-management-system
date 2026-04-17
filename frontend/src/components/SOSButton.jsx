@@ -57,7 +57,7 @@ const SOSButton = () => {
         onClick={() => setIsOpen(true)}
         className="fixed bottom-[88px] right-4 z-[60] w-11 h-11 rounded-full flex items-center justify-center
           bg-gradient-to-br from-red-600 to-red-700 shadow-lg shadow-red-500/30
-          hover:shadow-red-500/50 active:scale-90 transition-all duration-200 sos-pulse"
+          hover:scale-105 hover:shadow-red-500/50 active:scale-90 transition-all duration-200 sos-pulse"
       >
         <ShieldAlert className="text-white" size={18} />
       </button>
