@@ -36,22 +36,31 @@ The overall flow is:
 
 - The venue is treated as a single live event with one active stadium model.
 - Crowd and queue data are simulated, not pulled from real sensors.
-- Google Gemini is optional and enabled through Vertex AI service-account auth in `backend/.env`.
+- Google Gemini is optional and can be enabled either through Vertex AI service-account auth or a Google AI Studio API key in `backend/.env`.
 - If Gemini is unavailable, the app should still work with the local fallback chatbot.
 - REST API requests are expected to go to port 3001 and the Vite frontend to port 5173 during local development.
 - The attendee experience is optimized for short, actionable answers rather than long-form conversation.
 
 ## Setup Notes
 
-### Vertex AI Chatbot
+### Gemini Chatbot (Vertex Or Free-tier)
 
-The chatbot now prefers Google Vertex AI with service-account credentials. To enable it, set these values in `backend/.env`:
+The chatbot supports two Google integration modes:
 
-- `GOOGLE_CLOUD_PROJECT` or `FIREBASE_PROJECT_ID`
-- `GOOGLE_CLOUD_LOCATION` such as `us-central1`
-- `GOOGLE_APPLICATION_CREDENTIALS` pointing to your service-account JSON file, or `FIREBASE_APPLICATION_CREDENTIALS` with the same path
+- Vertex AI (service account): best for production.
+- Google AI Studio API key: simpler option that can run within free-tier limits.
 
-The backend will use Vertex AI first and fall back to the built-in stadium responder if the credentials are missing or Vertex is unavailable.
+Set these in `backend/.env`:
+
+- `GOOGLE_GEMINI_MODEL` and `GOOGLE_GEMINI_TIMEOUT_MS`
+- For Vertex mode: `GOOGLE_CLOUD_PROJECT`, `GOOGLE_CLOUD_LOCATION`, and `GOOGLE_APPLICATION_CREDENTIALS` (or `FIREBASE_APPLICATION_CREDENTIALS`)
+- For AI Studio key mode: `GOOGLE_API_KEY`
+
+Runtime behavior:
+
+- Backend prefers Vertex AI when credentials/project are present.
+- If Vertex is not configured, it tries `GOOGLE_API_KEY` against Gemini API.
+- If both are unavailable or fail, it uses the built-in local fallback responder.
 
 ### Firebase Alerts And Auth
 
@@ -70,7 +79,7 @@ If Firebase is not configured, the UI falls back to the local demo alerts and th
 
 - Firebase Auth is used for anonymous session identity in the alerts flow.
 - Firestore stores SOS alerts and chat transcripts from the backend.
-- Vertex AI replaces the AI Studio API key flow for Gemini-style responses.
+- Vertex AI is preferred for Gemini-style responses, with AI Studio API key as a non-Vertex fallback option.
 - Google Maps is already wired into the venue map screen for navigation.
 
 ## Go Live (Step By Step)

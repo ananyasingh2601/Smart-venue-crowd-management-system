@@ -104,6 +104,7 @@ export default async function apiRoutes(fastify) {
 
     try {
       const gemini = await generateGeminiReply({
+        apiKey: config.google.apiKey,
         model: config.google.geminiModel,
         timeoutMs: config.google.requestTimeoutMs,
         message,

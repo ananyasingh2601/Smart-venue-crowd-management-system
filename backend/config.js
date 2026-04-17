@@ -62,6 +62,7 @@ const config = Object.freeze({
   google: {
     vertexProjectId: env('GOOGLE_CLOUD_PROJECT', ''),
     vertexLocation: env('GOOGLE_CLOUD_LOCATION', 'us-central1'),
+    apiKey: env('GOOGLE_API_KEY', ''),
     geminiModel: env('GOOGLE_GEMINI_MODEL', 'gemini-2.0-flash'),
     requestTimeoutMs: envInt('GOOGLE_GEMINI_TIMEOUT_MS', 12000),
   },
